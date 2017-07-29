@@ -9,20 +9,18 @@ class Controller
         $this->model = new Model();
         $this->view = new View(TEMPLATE);   
 
-        if (!empty($_POST['email']))
-        { 
-            $post = $this->model->checkForm();  
-            if($post['result'] === true)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+        {
+            $result = $this->model->checkForm();
+            if($result['result'] === true)
             {
                 $this->pageSendMail();
             }
             else
             {
-                print_r($post['message']);
-                $this->view->addToReplace($post['message']);
-
+                $this->getArray($result['data']);
             }
-         }
+        }
         else
         {
             $this->pageDefault();   
@@ -33,18 +31,28 @@ class Controller
 
     private function pageSendMail ()
     {
+        $result = $this->model->sendEmail();
 
-        $this->model->sendEmail();
-
-        $mArray = $this->model->getArray();     
-        $this->view->addToReplace($mArray); 
+        $this->getArray($result['data']);
     }   
 
     private function pageDefault ()
     {   
-       echo 1;
-       $mArray = $this->model->getArray();      
-        $this->view->addToReplace($mArray);
-    }               
+        $this->getArray();
+    }
+
+    private function getArray ($data = null)
+    {
+        $mArray = $this->model->getArray();
+        if (empty($data))
+        {
+            $rArray = $mArray;
+        }
+        else
+        {
+            $rArray = array_merge($mArray, $data);
+        }
+        $this->view->addToReplace($rArray);
+    }
 }
 
